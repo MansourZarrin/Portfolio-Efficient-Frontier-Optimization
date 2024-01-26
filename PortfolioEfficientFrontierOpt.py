@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Created on Mon Oct 16 11:52:09 2023
 
@@ -9,9 +7,7 @@ Created on Mon Oct 16 11:52:09 2023
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
-import matplotlib.pyplot as plt
 import yfinance as yf
-from prettytable import PrettyTable
 
 
 class PortfolioOptimizer:
@@ -79,67 +75,6 @@ class PortfolioOptimizer:
         vol = np.sqrt(np.dot(weights.T, np.dot(self.log_ret.cov() * len(self.log_ret), weights)))
         sr = ret / vol
         return np.array([ret, vol, sr])
-
-    def plot_efficient_frontier(self, num_sims=10000):
-        plt.figure(dpi=150)
-        portfolio_returns = []
-        portfolio_volatility = []
-        sharpe_ratios = []
-        
-        for _ in range(num_sims):
-            weights = np.random.random(self.num_assets)
-            weights /= np.sum(weights)
-            ret = np.sum(self.log_ret.mean() * weights) * len(self.log_ret)
-            vol = np.sqrt(np.dot(weights.T, np.dot(self.log_ret.cov() * len(self.log_ret), weights)))
-            sr = ret / vol
-            
-            portfolio_returns.append(ret)
-            portfolio_volatility.append(vol)
-            sharpe_ratios.append(sr)
-        
-        # Convert lists to NumPy arrays
-        portfolio_returns = np.array(portfolio_returns)
-        portfolio_volatility = np.array(portfolio_volatility)
-        sharpe_ratios = np.array(sharpe_ratios)
-        
-        # Locate position of portfolio with maximum Sharpe Ratio
-        max_sr_idx = np.argmax(sharpe_ratios)
-        max_sr_ret = portfolio_returns[max_sr_idx]
-        max_sr_vol = portfolio_volatility[max_sr_idx]
-                
-        plt.scatter(portfolio_volatility, portfolio_returns, c=sharpe_ratios, cmap='plasma')
-        plt.colorbar(label='Sharpe Ratio')
-        plt.xlabel('Volatility')
-        plt.ylabel('Return')
-        plt.title('Efficient Frontier')
-        
-        # Calculate and plot the efficient frontier
-        frontier_y = np.linspace(0.0, max(self.portfolio_returns), 100)
-        frontier_volatility = [self.calculate_frontier_volatility(ret) for ret in frontier_y]
-        plt.plot(frontier_volatility, frontier_y, 'g--', linewidth=3, label="Efficient Frontier")
-        # Add a red dot for the portfolio with maximum Sharpe Ratio
-        plt.scatter(max_sr_vol, max_sr_ret, c='red', marker="*", s=150, edgecolors='black', label='Max Sharpe Ratio')
-        plt.legend(loc='best')    
-        plt.show()
-
-    def display_results(self, opt_results):
-        x = PrettyTable()
-        x.field_names = ["Ticker", "Optimal Weight"]
-
-        # Add tickers and their corresponding optimal weights
-        for ticker, weight in zip(self.tickers, opt_results.x):
-            x.add_row([ticker, round(weight,4)])
-
-        # Add a separator
-        x.add_row(["-----", "-----"])
-
-        # Add other metrics
-        ret, vol, sr = self.calculate_performance_metrics(opt_results.x)
-        x.add_row(["Expected Return", round(ret, 4)])
-        x.add_row(["Expected Volatility", round(vol, 4)])
-        x.add_row(["Sharpe Ratio", round(sr, 4)])
-
-        print(x)
 
 # Sample usage
 if __name__ == "__main__":
